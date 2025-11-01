@@ -3,7 +3,7 @@ import logging
 from telegram.ext import Application, MessageHandler, filters
 
 SOURCE = "@time_n_John"
-TARGET = "@finanosint"
+TARGET = "-2914190770"
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
