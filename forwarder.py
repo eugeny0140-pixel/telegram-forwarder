@@ -4,7 +4,7 @@ from telegram.ext import Application, MessageHandler, filters
 
 # === Настройки ===
 SOURCE = "@time_n_John"          # Публичный канал-источник (можно заменить на ID)
-TARGET = "6957643599"           # Приватный канал-получатель (ID без @)
+TARGET = "-2914190770"           # Приватный канал-получатель (ID без @)
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
