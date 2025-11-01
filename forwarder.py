@@ -3,8 +3,8 @@ import logging
 from telegram.ext import Application, MessageHandler, filters
 
 # === Настройки ===
-SOURCE = "@time_n_John"          # Публичный канал-источник (можно заменить на ID)
-TARGET = "-2914190770"           # Приватный канал-получатель (ID без @)
+SOURCE = "@time_n_John"
+TARGET = "-2914190770"
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
@@ -24,18 +24,15 @@ async def forward(update, context):
 
     chat = msg.chat
     expected_username = SOURCE.lstrip('@')
-    # Поддержка как username, так и числового ID источника
     if chat.username != expected_username and str(chat.id) != SOURCE:
         return
 
     try:
-        # Копируем сообщение — без упоминания отправителя
         await context.bot.copy_message(
             chat_id=TARGET,
             from_chat_id=msg.chat.id,
-            message_id=msg.message_id,
-            caption=msg.caption if msg.caption else None,
-            parse_mode="HTML"
+            message_id=msg.message_id
+            # caption и parse_mode НЕ нужны — форматирование сохранится автоматически
         )
         logger.info(f"✅ Скопировано (скрыто): {msg.message_id}")
     except Exception as e:
