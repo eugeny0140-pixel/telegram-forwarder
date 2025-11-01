@@ -2,13 +2,15 @@ import os
 import logging
 from telegram.ext import Application, MessageHandler, filters
 
-SOURCE = "@time_n_John"
-TARGET = "-2914190770"
+# === Настройки ===
+SOURCE = "@time_n_John"          # Публичный канал-источник (можно заменить на ID)
+TARGET = "-2914190770"           # Приватный канал-получатель (ID без @)
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
-    raise ValueError("FORWARDER_BOT_TOKEN не задан")
+    raise ValueError("Переменная FORWARDER_BOT_TOKEN не задана")
 
+# === Логирование ===
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -22,6 +24,7 @@ async def forward(update, context):
 
     chat = msg.chat
     expected_username = SOURCE.lstrip('@')
+    # Поддержка как username, так и числового ID источника
     if chat.username != expected_username and str(chat.id) != SOURCE:
         return
 
@@ -41,7 +44,7 @@ async def forward(update, context):
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.ChatType.CHANNEL, forward))
-    logger.info("🚀 Бот запущен...")
+    logger.info("🚀 Бот запущен и ожидает сообщений...")
     app.run_polling()
 
 if __name__ == "__main__":
