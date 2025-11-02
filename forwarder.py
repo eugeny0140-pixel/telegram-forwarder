@@ -1,53 +1,41 @@
 import os
 import logging
-from telegram.ext import Application, MessageHandler, filters
+from telegram import Update
+from telegram.ext import Application, MessageHandler, filters, ContextTypes
 
-# === Настройки ===
-SOURCE = "@time_n_John"
-TARGET = "@finanosint"
-BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL", "@time_n_John")
+TARGET_CHANNEL = os.getenv("TARGET_CHANNEL", "@finanosint")
 
-if not BOT_TOKEN:
-    raise ValueError("Переменная FORWARDER_BOT_TOKEN не задана")
-
-# === Логирование ===
-logging.basicConfig(
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.INFO
-)
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(message)s")
 logger = logging.getLogger(__name__)
 
-async def forward(update, context):
-    msg = update.channel_post
-    if not msg:
+async def forward_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    message = update.channel_post
+    if not message:
         return
 
-    chat = msg.chat
-    expected_username = SOURCE.lstrip('@')
-    
-    # Поддержка как @username, так и числового ID
-    if chat.username != expected_username and str(chat.id) != SOURCE.lstrip('@'):
-        logger.debug(f"Пропущено сообщение из {chat.username or chat.id}")
+    # Проверяем, что сообщение из нужного канала
+    chat_username = message.chat.username
+    if f"@{chat_username}" != SOURCE_CHANNEL:
         return
 
     try:
-        await context.bot.copy_message(
-            chat_id=TARGET,
-            from_chat_id=msg.chat.id,
-            message_id=msg.message_id
+        # Пересылаем сообщение как есть (сохраняя форматирование, фото, ссылки)
+        await context.bot.forward_message(
+            chat_id=TARGET_CHANNEL,
+            from_chat_id=message.chat_id,
+            message_id=message.message_id
         )
-        logger.info(f"✅ Скопировано (скрыто): {msg.message_id}")
+        logger.info(f"✅ Переслано: {message.message_id}")
     except Exception as e:
-        logger.error(f"❌ Ошибка при копировании: {e}", exc_info=True)
+        logger.error(f"❌ Ошибка: {e}")
 
 def main():
-    app = Application.builder().token(BOT_TOKEN).build()
-    
-    # Используем правильный фильтр для channel_post
-    app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, forward))
-    
-    logger.info("🚀 Бот запущен и ожидает сообщений из канала...")
-    app.run_polling()
+    application = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
+    application.add_handler(MessageHandler(filters.CHANNEL_POSTS, forward_message))
+    logger.info(f"🚀 Бот запущен. Мониторинг {SOURCE_CHANNEL} → {TARGET_CHANNEL}")
+    application.run_polling()
 
 if __name__ == "__main__":
     main()
