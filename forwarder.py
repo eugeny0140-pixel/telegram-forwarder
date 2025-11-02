@@ -2,15 +2,13 @@ import os
 import logging
 from telegram.ext import Application, MessageHandler, filters
 
-# === Настройки ===
 SOURCE = "@time_n_John"
-TARGET = "https://t.me/finanosint"
+TARGET = "@finanosint"  # ← публичное имя с @
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
-    raise ValueError("Переменная FORWARDER_BOT_TOKEN не задана")
+    raise ValueError("FORWARDER_BOT_TOKEN не задан")
 
-# === Логирование ===
 logging.basicConfig(
     format='%(asctime)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -24,7 +22,7 @@ async def forward(update, context):
 
     chat = msg.chat
     expected_username = SOURCE.lstrip('@')
-    if chat.username != expected_username and str(chat.id) != SOURCE:
+    if chat.username != expected_username:
         return
 
     try:
@@ -32,16 +30,15 @@ async def forward(update, context):
             chat_id=TARGET,
             from_chat_id=msg.chat.id,
             message_id=msg.message_id
-            # caption и parse_mode НЕ нужны — форматирование сохранится автоматически
         )
-        logger.info(f"✅ Скопировано (скрыто): {msg.message_id}")
+        logger.info(f"✅ Скопировано: {msg.message_id}")
     except Exception as e:
-        logger.error(f"❌ Ошибка при копировании: {e}", exc_info=True)
+        logger.error(f"❌ Ошибка: {e}", exc_info=True)
 
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
     app.add_handler(MessageHandler(filters.ChatType.CHANNEL, forward))
-    logger.info("🚀 Бот запущен и ожидает сообщений...")
+    logger.info("🚀 Бот запущен...")
     app.run_polling()
 
 if __name__ == "__main__":
