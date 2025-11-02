@@ -4,7 +4,7 @@ from telegram.ext import Application, MessageHandler, filters
 
 # === Настройки ===
 SOURCE = "@time_n_John"
-TARGET = "-2914190770"
+TARGET = "https://t.me/finanosint"
 BOT_TOKEN = os.getenv("FORWARDER_BOT_TOKEN")
 
 if not BOT_TOKEN:
