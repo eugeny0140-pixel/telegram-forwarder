@@ -24,7 +24,10 @@ async def forward(update, context):
 
     chat = msg.chat
     expected_username = SOURCE.lstrip('@')
-    if chat.username != expected_username and str(chat.id) != SOURCE:
+    
+    # Поддержка как @username, так и числового ID
+    if chat.username != expected_username and str(chat.id) != SOURCE.lstrip('@'):
+        logger.debug(f"Пропущено сообщение из {chat.username or chat.id}")
         return
 
     try:
@@ -32,7 +35,6 @@ async def forward(update, context):
             chat_id=TARGET,
             from_chat_id=msg.chat.id,
             message_id=msg.message_id
-            # caption и parse_mode НЕ нужны — форматирование сохранится автоматически
         )
         logger.info(f"✅ Скопировано (скрыто): {msg.message_id}")
     except Exception as e:
@@ -40,8 +42,11 @@ async def forward(update, context):
 
 def main():
     app = Application.builder().token(BOT_TOKEN).build()
-    app.add_handler(MessageHandler(filters.ChatType.CHANNEL, forward))
-    logger.info("🚀 Бот запущен и ожидает сообщений...")
+    
+    # Используем правильный фильтр для channel_post
+    app.add_handler(MessageHandler(filters.UpdateType.CHANNEL_POST, forward))
+    
+    logger.info("🚀 Бот запущен и ожидает сообщений из канала...")
     app.run_polling()
 
 if __name__ == "__main__":
